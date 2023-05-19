@@ -1,3 +1,23 @@
+# ====================================================================================================================================================================================
+# Description:  This is a Mqtt listener/publisher for LoRa Field tester (RAK10701). This script should be run as service on your ChirpStack server.
+#               You will need to set parameter <application_id> to match yours. You can optain it either from ChirpStack GUI or via ChirpStack API
+#               It is possible to run the script on different machine (other than ChirpStack server), but you will need to change the <broker_address> to match your ChirpStask IP 
+#               and configure mqtt authentication (username, password, jwt..)
+#
+#               On downlink, device expects 6 values as an array. Here is a sample
+#               [1, 140, 147, 1, 23, 2]
+#                │   │    │   │   │  └───── Number of Gateways
+#                │   │    │   │   └──────── Maximum Distance from Gateway
+#                │   │    │   └──────────── Minimum Distance from Gateway
+#                │   │    └──────────────── Maximum RSSI value
+#                │   └───────────────────── Minimum RSSI value
+#                └───────────────────────── Proprietary. To be set as 1
+#
+# Author:        Sergi Jini
+# Date:          19.05.23
+# ====================================================================================================================================================================================
+
+
 import paho.mqtt.client as mqtt
 import time
 import base64
@@ -47,12 +67,7 @@ def enqueue_downlink(dev_euid, payload):
     try:    
         Hexstr = bytes(payload).hex()                                       # Convert array to HEX
         HexToBase64 = base64.b64encode(bytes.fromhex(Hexstr)).decode()      # Convert HEX to base64
-        packettosend = {
-            "devEui": dev_euid,
-            "confirmed":False,
-            "fPort":"2",
-            "data":HexToBase64
-        }
+        packettosend = {"devEui": dev_euid,"confirmed":False,"fPort":"2","data":HexToBase64}
         json_packettosend = json.dumps(packettosend)
         client.publish("application/bd6d3d7f-c699-4ef9-8603-481aa9412675/device/ac1f09fffe08e82c/command/down", json_packettosend, 0, False)    
         print(json_packettosend)
@@ -72,14 +87,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     dlon = lon2 - lon1
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2     # Haversine formula
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
     distance = 1 + int((math.floor(radius * c))/250)                        # Device expects to receive 250m as value 1, 500m as value 2, etc..
-
-    #distance = 1 + (int(distance/250))
-    #if distance < 250:
-    #    distance = 1
-    #else:
-    #    distance = int(distance /250)
 
     return distance
 
