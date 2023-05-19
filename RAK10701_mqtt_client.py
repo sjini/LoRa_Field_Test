@@ -24,7 +24,6 @@ import base64
 import json
 import math
 from math import radians, sin, cos, sqrt, atan2
-import datetime
 
 
 # Process the data once payload arrives
@@ -69,7 +68,7 @@ def enqueue_downlink(dev_euid, payload):
         HexToBase64 = base64.b64encode(bytes.fromhex(Hexstr)).decode()      # Convert HEX to base64
         packettosend = {"devEui": dev_euid,"confirmed":False,"fPort":"2","data":HexToBase64}
         json_packettosend = json.dumps(packettosend)
-        client.publish("application/bd6d3d7f-c699-4ef9-8603-481aa9412675/device/ac1f09fffe08e82c/command/down", json_packettosend, 0, False)    
+        client.publish("application/" + application_id + "/device/" + dev_euid + "/command/down", json_packettosend, 0, False)    
         print(json_packettosend)
         print(payload)
     except:
