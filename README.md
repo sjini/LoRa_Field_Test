@@ -4,7 +4,7 @@ Code assembled in refference to following quick start guide - https://docs.rakwi
 
 This is a Mqtt listener/publisher for LoRa Field tester (RAK10701). This script should be run as service on your ChirpStack server.
 You will need to set parameter <application_id> to match yours. You can optain it either from ChirpStack GUI or via ChirpStack API
-It is possible to run the script on different machine (other than ChirpStack server), but you will need to change the <broker_address> to match your ChirpStask IP and configure mqtt authentication (username, password, jwt..)
+It is possible to run the script on different machine (other than ChirpStack server), but you will need to change the <broker_address> to match your ChirpStask IP and configure mqtt authentication (username, password, jwt..).
 On downlink, device expects 6 values as an array. Here is a sample
 
                [1, 140, 147, 1, 23, 2]
@@ -13,7 +13,7 @@ On downlink, device expects 6 values as an array. Here is a sample
                 │   │    │   └──────────── Minimum Distance from Gateway
                 │   │    └──────────────── Maximum RSSI value
                 │   └───────────────────── Minimum RSSI value
-                └───────────────────────── Proprietary. To be set as 1
+                └───────────────────────── Downlink counter. incremental
 
 ## Table of Contents
 
@@ -71,7 +71,9 @@ Verify the service: Check the status of the service to ensure it is running prop
 If everything is set up correctly, you should see the status as "active (running)".
 From this moment, you should see data updated on RAK10701 screen
 
-## Contributing
+## To be done
+
+1. Need to make first byte of downlink incremental (downlink counter). For now it is always set to 1
 
 
 
