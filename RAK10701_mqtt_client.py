@@ -87,13 +87,15 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2     # Haversine formula
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance = 1 + int((math.floor(radius * c))/250)                        # Device expects to receive 250m as value 1, 500m as value 2, etc..
+    if distance > 255:                                                      # Avoid sending 63,750m as  value should be in 0-25>
+       distance = 255
 
     return distance
 
 
 # ===============================================  M A I N ======================================================
 
-application_id='bd6d3d7f-c699-4ef9-8603-481aa9412675'                       # Application ID from ChirpStack
+application_id='1699a6c3-ca09-4365-8193-fd6ec1d069c8'                       # Application ID from ChirpStack
 broker_address="localhost"                                                  # IP of the MQTT server. In this case script runs on same machine where MQTT service resides
 broker_port=1883                                                            # Broker port. Change it in case your broker uses non standard port. Chirpstack default is 1883
 client = mqtt.Client("P1")                                                  # Create new instance
