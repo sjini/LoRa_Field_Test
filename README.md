@@ -3,7 +3,7 @@
 Code assembled in refference to following quick start guide - https://docs.rakwireless.com/Product-Categories/WisNode/RAK10701-P/Quickstart/#lorawan-network-servers-guide-for-rak10701-p-field-tester-pro
 
 This is a Mqtt listener/publisher for LoRa Field tester (RAK10701). This script should be run as service on your ChirpStack server.
-You will need to set parameter <application_id> to match yours. You can obtain it either from ChirpStack GUI or via ChirpStack API
+You will need to set parameter <application_id> to match yours. You can obtain it either from ChirpStack GUI or via ChirpStack API.
 It is possible to run the script on different machine (other than ChirpStack server), but you will need to change the <broker_address> to match your ChirpStask IP and configure mqtt authentication (username, password, jwt..).
 On downlink, device expects 6 values as an array. Here is a sample
 
