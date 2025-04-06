@@ -13,8 +13,9 @@
 #                │   └───────────────────── Minimum RSSI value
 #                └───────────────────────── Proprietary. To be set as 1
 #
-# Author:        Sergi Jini
-# Date:          19.05.23
+# Author:	Sergi Jini
+# Date:		19.05.23
+# Revision:	04.04.25 (Python upgrade)
 # ====================================================================================================================================================================================
 
 
@@ -30,6 +31,9 @@ from math import radians, sin, cos, sqrt, atan2
 def on_message(client, userdata, message):
     json_data = str(message.payload.decode("utf-8"))
     data = json.loads(json_data)                                            # Parse the JSON datavalues
+    print("==========================================================\n")
+    print(data)
+    print("==========================================================\n")
     if next(iter(data)) == 'deduplicationId':                               # Access the first element using indexing to check if it is needed packet. In my case it should start with key 'deduplicationId'
         try:                                                                # Try extracting key values. In some cases json keys/values are not complete, resulting in script exception
             device_eui = data['deviceInfo']['devEui']
@@ -46,14 +50,14 @@ def on_message(client, userdata, message):
             location_array = [0] * gw_number                                # Create empty array
             for index,value in enumerate(rx_info):                          # Loop through each available location values
                 lat_temp = round(value['location']['latitude'],5)
-                long_temp = round(value['location']['longitude'],5)         
+                long_temp = round(value['location']['longitude'],5)
                 location_array[index] = calculate_distance(device_lat, device_long,lat_temp,long_temp)  # Caltulate distance and save each value in location array table
-            
             min_distance = min(location_array)                              # Get the minimum value from location array
             max_distance = max(location_array)                              # Get the maximum value from location array
 
             # construct payload for downlink
             payload = [1,min_rssi,max_rssi,min_distance,max_distance,gw_number]
+            print(payload)
             enqueue_downlink(device_eui,payload)
             integrity_check = True                                          # Integrity check flag. Reserved for future revision
         except:
@@ -63,16 +67,19 @@ def on_message(client, userdata, message):
 
 # Schedule downlink for the device
 def enqueue_downlink(dev_euid, payload):
-    try:    
+    try:
+
+        # Ensure payload is a list of integers in range 0-255
+        if not all(isinstance(i, int) and 0 <= i <= 255 for i in payload):
+            raise ValueError("Payload must be a list of integers between 0-255")
         Hexstr = bytes(payload).hex()                                       # Convert array to HEX
         HexToBase64 = base64.b64encode(bytes.fromhex(Hexstr)).decode()      # Convert HEX to base64
-        packettosend = {"devEui": dev_euid,"confirmed":False,"fPort":"2","data":HexToBase64}
+        packettosend = {"devEui": dev_euid,"confirmed":False,"fPort":'2',"data":HexToBase64}
         json_packettosend = json.dumps(packettosend)
-        client.publish("application/" + application_id + "/device/" + dev_euid + "/command/down", json_packettosend, 0, False)    
-        print(json_packettosend)
-        print(payload)
-    except:
-        print('Error while converting payload to HEX/base64')
+        client.publish("application/" + APPLICATION_ID + "/device/" + dev_euid + "/command/down", json_packettosend, 0, False)
+        print("Downlink scheduled successfully!")
+    except Exception and e:							# Capture the actual error
+        print(f'Error while converting payload to HEX/base64: {e}')
 
 
 # Calculate distance between 2 coordinates using Harvesine formula. Returns difference in meters / 250
@@ -93,27 +100,37 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     return distance
 
 
+
 # ===============================================  M A I N ======================================================
 
-application_id='1699a6c3-ca09-4365-8193-fd6ec1d069c8'                       # Application ID from ChirpStack
-broker_address="localhost"                                                  # IP of the MQTT server. In this case script runs on same machine where MQTT service resides
-broker_port=1883                                                            # Broker port. Change it in case your broker uses non standard port. Chirpstack default is 1883
-client = mqtt.Client("P1")                                                  # Create new instance
-client.on_message=on_message                                                # Attach function to callback
-print("Connecting to broker")
-client.connect(broker_address, broker_port)                                 # Connect to broker
+# MQTT Broker details
+BROKER = ""					# Replace with your broker's address
+PORT = 1883							# Default MQTT port
+APPLICATION_ID = "" 	# Your specific application ID
+TOPIC = f"application/{APPLICATION_ID}/device/+/event/#"	# Filter messages for this application
 
-# Need to add on connect procedure here, to loop until connection is established. client.on_connect = on_connect    
 
-client.loop_start()                                                         # Start the loop
-print("Subscribing to topic")
-client.subscribe("application/"+application_id+"/#")
+# Authentication
+USERNAME = ""  						# Replace with your MQTT username
+PASSWORD = ""					# Replace with your MQTT password
 
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    print ("exiting")
-    client.disconnect()
-    client.loop_stop()
+# Callback when connected to the broker
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT broker!")
+        client.subscribe(TOPIC)					# Subscribe to wildcard topic
+    else:
+        print(f"Failed to connect, return code {rc}")
+
+
+# Set up MQTT client
+client = mqtt.Client()
+client.username_pw_set(USERNAME, PASSWORD)			# Set username and password
+client.on_connect = on_connect
+client.on_message = on_message
+
+# Connect and listen
+client.connect(BROKER, PORT, 60)
+client.loop_forever()						# Keep listening
+
 
