@@ -27,8 +27,8 @@ On downlink, device expects 6 values as an array. Here is a sample
 It is recommended that RAK10701_mqtt_client.py script is installed as a service to ensure continuous uplink/downlink functionality.
 Here is the setup, which I had at the moment of writing this code:
 
-    Debian GNU/Linux 11 (bullseye)
-    Python 3.9.2
+    Debian GNU/Linux 12
+    Python 3.11.2
     pip 20.3.4
     paho-mqtt 1.6.1 
     Chirpstack v4
